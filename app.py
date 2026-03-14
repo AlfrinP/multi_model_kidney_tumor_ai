@@ -6,6 +6,8 @@ import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
 
+st.set_page_config(page_title="Kidney Tumor AI", page_icon="🩻", layout="wide")
+
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # ---------------------------------
@@ -244,87 +246,139 @@ def tumor_localization(mask,image_shape):
 # STREAMLIT UI
 # ---------------------------------
 
-st.title("Kidney Tumor Detection (CT + MRI Fusion)")
+st.markdown("""
+    <style>
+    /* Custom CSS to inject some modern styling */
+    .stApp {
+        background-color: #0E1117;
+    }
+    .css-1d391kg {  /* Sidebar */
+        background-color: #161A22;
+    }
+    div[data-testid="stMetric"] {
+        background-color: #1E2127;
+        padding: 15px 20px;
+        border-radius: 10px;
+        border: 1px solid #2B303B;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    div[data-testid="stMetric"] label {
+        color: #A0ABC0;
+        font-weight: 500;
+    }
+    div[data-testid="stMetric"] [data-testid="stMetricValue"] {
+        color: #FFFFFF;
+        font-weight: 700;
+    }
+    hr {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        border-color: #2B303B;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-scan_id = st.text_input("Patient Scan ID")
+st.title("🩻 Kidney Tumor Detection AI")
+st.markdown("*Multi-Modal CT & MRI Fusion for Accurate Renal Tumor Localization*")
+st.divider()
 
-st.subheader("Upload Scans")
-
-ct_file = st.file_uploader("Upload CT Scan",type=["png","jpg","jpeg"])
-mri_file = st.file_uploader("Upload MRI Scan",type=["png","jpg","jpeg"])
-
+# Sidebar for inputs
+with st.sidebar:
+    st.header("Patient Data Input")
+    scan_id = st.text_input("Patient Scan ID", placeholder="e.g. PT-10024")
+    
+    st.markdown("### Upload Scans")
+    ct_file = st.file_uploader("Upload CT Scan", type=["png","jpg","jpeg"])
+    mri_file = st.file_uploader("Upload MRI Scan", type=["png","jpg","jpeg"])
+    
+    st.info("Medical Image Processing requires both CT and MRI scan inputs for the fusion network.")
 
 if ct_file and mri_file:
 
     ct_img = np.array(Image.open(ct_file))
     mri_img = np.array(Image.open(mri_file))
 
-    st.image(ct_img,caption="CT Scan")
-    st.image(mri_img,caption="MRI Scan")
+    ct_tensor, ct_processed = preprocess(ct_img)
+    mri_tensor, mri_processed = preprocess(mri_img)
 
-    ct_tensor,ct_processed = preprocess(ct_img)
-    mri_tensor,mri_processed = preprocess(mri_img)
+    with st.spinner('Running AI inference models...'):
+        ct_mask, ct_conf = predict(ct_model, ct_tensor)
+        mri_mask, mri_conf = predict(mri_model, mri_tensor)
 
-    ct_mask,ct_conf = predict(ct_model,ct_tensor)
-    mri_mask,mri_conf = predict(mri_model,mri_tensor)
+        # -----------------
+        # FUSION
+        # -----------------
 
-    # -----------------
-    # FUSION
-    # -----------------
+        fused_mask = np.logical_or(ct_mask, mri_mask).astype(np.uint8)
+        confidence = (ct_conf + mri_conf) / 2
+        diameter, volume = compute_measurements(fused_mask)
+        localization, bbox = tumor_localization(fused_mask, ct_processed.shape)
 
-    fused_mask = np.logical_or(ct_mask,mri_mask).astype(np.uint8)
+        tumor_detected = np.sum(fused_mask) > 0
+        diagnosis = "Renal Tumor Detected" if tumor_detected else "No Tumor Detected"
+        diagnosis_color = "🔴" if tumor_detected else "🟢"
 
-    confidence = (ct_conf + mri_conf)/2
+        overlay = ct_processed.copy()
+        overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
 
-    diameter,volume = compute_measurements(fused_mask)
+        # Add red color to where the mask is
+        overlay[fused_mask == 1] = [255, 0, 0]
 
-    localization,bbox = tumor_localization(fused_mask,ct_processed.shape)
+        if bbox:
+            x_min, y_min, x_max, y_max = bbox
+            cv2.rectangle(
+                overlay,
+                (x_min, y_min),
+                (x_max, y_max),
+                (0, 255, 0),
+                2
+            )
 
-    diagnosis = "Renal Tumor Detected" if np.sum(fused_mask)>0 else "No Tumor Detected"
+    st.subheader(f"{diagnosis_color} Diagnosis Report: {scan_id if scan_id else 'Unknown Patient'}")
+    
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("Diagnosis", diagnosis)
+    m2.metric("Confidence Score", f"{confidence:.2f}%")
+    m3.metric("Tumor Volume", f"{volume:.2f} cm³")
+    m4.metric("Tumor Diameter", f"{diameter:.2f} cm")
+    
+    if tumor_detected:
+        st.info(f"**Anatomical Localization:** {localization}")
 
-    overlay = ct_processed.copy()
-    overlay = cv2.cvtColor(overlay,cv2.COLOR_GRAY2RGB)
+    st.divider()
 
-    overlay[fused_mask==1] = [255,0,0]
+    st.subheader("Input Modalities")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.image(ct_img, caption="Original CT Scan", use_container_width=True)
+    with col2:
+        st.image(mri_img, caption="Original MRI Scan", use_container_width=True)
 
-    if bbox:
+    st.divider()
+    
+    st.subheader("Segmentation & Fusion Results")
+    
+    # Create colored mask display
+    mask_display = np.zeros_like(overlay)
+    mask_display[fused_mask == 1] = [255, 69, 0] # Orange-Red color
+    
+    r1, r2, r3, r4 = st.columns(4)
+    with r1:
+        st.image(ct_processed, caption="Processed CT", use_container_width=True)
+    with r2:
+        st.image(mri_processed, caption="Processed MRI", use_container_width=True)
+    with r3:
+        st.image(mask_display, caption="Fused Mask", use_container_width=True)
+    with r4:
+        st.image(overlay, caption="Overlay Detection", use_container_width=True)
 
-        x_min,y_min,x_max,y_max = bbox
-
-        cv2.rectangle(
-            overlay,
-            (x_min,y_min),
-            (x_max,y_max),
-            (0,255,0),
-            2
-        )
-
-    st.subheader("Diagnosis Report")
-
-    st.write("Patient Scan ID:",scan_id)
-    st.write("Diagnosis:",diagnosis)
-    st.write("Confidence Score:",round(confidence,2),"%")
-    st.write("Tumor Diameter:",round(diameter,2),"cm")
-    st.write("Tumor Volume:",round(volume,2),"cm³")
-    st.write("Tumor Localization:",localization)
-
-    st.subheader("Segmentation Result")
-
-    fig,ax = plt.subplots(1,4,figsize=(16,4))
-
-    ax[0].imshow(ct_processed,cmap="gray")
-    ax[0].set_title("CT Scan")
-
-    ax[1].imshow(mri_processed,cmap="gray")
-    ax[1].set_title("MRI Scan")
-
-    ax[2].imshow(fused_mask,cmap="hot")
-    ax[2].set_title("Fused Mask")
-
-    ax[3].imshow(overlay)
-    ax[3].set_title("Overlay")
-
-    for a in ax:
-        a.axis("off")
-
-    st.pyplot(fig)
+else:
+    # Empty state UI
+    st.info("👈 Please upload patient CT and MRI scans in the sidebar to generate a diagnostic report.")
+    
+    st.markdown("### Example Workflow")
+    st.markdown('''
+    1. **Upload Scans**: Use the sidebar to upload a set of Coregistered CT and MRI scans.
+    2. **AI Inference**: The system asynchronously processes both scans using dedicated U-Net models.
+    3. **Fusion & Analysis**: Extracts accurate tumor volume/diameter and localization via deterministic fusion.
+    ''')
