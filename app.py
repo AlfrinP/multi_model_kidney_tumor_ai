@@ -216,6 +216,16 @@ def compute_measurements(mask):
 
     return diameter,volume
 
+def predict_tumor_stage(diameter, tumor_detected):
+    if not tumor_detected:
+        return "N/A", "⚪"
+    
+    # Simplified TNM staging based on size
+    if diameter <= 7.0:
+        return "Stage I (T1)", "🟡"
+    else:
+        # Assuming limited to kidney for simplicity of this demo
+        return "Stage II (T2)", "🟠"
 
 def tumor_localization(mask,image_shape):
 
@@ -317,6 +327,8 @@ if ct_file and mri_file:
         tumor_detected = np.sum(fused_mask) > 0
         diagnosis = "Renal Tumor Detected" if tumor_detected else "No Tumor Detected"
         diagnosis_color = "🔴" if tumor_detected else "🟢"
+        
+        stage, stage_color = predict_tumor_stage(diameter, tumor_detected)
 
         overlay = ct_processed.copy()
         overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
@@ -336,11 +348,12 @@ if ct_file and mri_file:
 
     st.subheader(f"{diagnosis_color} Diagnosis Report: {scan_id if scan_id else 'Unknown Patient'}")
     
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Diagnosis", diagnosis)
     m2.metric("Confidence Score", f"{confidence:.2f}%")
     m3.metric("Tumor Volume", f"{volume:.2f} cm³")
     m4.metric("Tumor Diameter", f"{diameter:.2f} cm")
+    m5.metric(f"Predicted Stage {stage_color}", stage)
     
     if tumor_detected:
         st.info(f"**Anatomical Localization:** {localization}")

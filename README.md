@@ -9,6 +9,7 @@ A state-of-the-art medical image processing application designed to perform accu
 - **Multi-Modal AI Fusion**: Combines insights from both CT and MRI scan inputs by running them asynchronously through dedicated U-Net models to generate accurate spatial detection.
 - **Automated Tumor Segmentation**: Identifies and precisely outlines the shape and bounds of the renal tumor.
 - **Volumetric & Spatial Measurements**: Automatically computes critical diagnostic metrics including Tumor Diameter (cm) and Tumor Volume (cm³).
+- **Tumor Stage Prediction**: Predicts early versus advanced tumor stages via the TNM clinical categorization system based on physical scan boundaries.
 - **Anatomical Localization**: Classifies real-time spatial orientation, automatically determining whether the tumor is on the Left/Right Kidney and Upper/Lower Cortex.
 - **Modern Dashboard UI**: Built on an intuitive Streamlit interface, ensuring a seamless experience for medical professionals to upload, view, and analyze scans in real-time.
 
