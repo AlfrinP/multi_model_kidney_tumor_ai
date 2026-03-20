@@ -34,7 +34,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install the required packages
-pip install torch streamlit opencv-python matplotlib pillow numpy
+pip install -r requirements.txt
 ```
 
 *(Note: If you plan on running the system via the CPU, you will need the CPU version of PyTorch. The inference models support CUDA natively for instantaneous execution.)*
