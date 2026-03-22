@@ -95,7 +95,7 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: rgba(15, 23, 42, 0.02);
 }
 
 .uploadZone:hover {

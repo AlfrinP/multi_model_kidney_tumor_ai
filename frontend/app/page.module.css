@@ -87,14 +87,16 @@
   font-weight: 800;
   line-height: 1.1;
   margin-bottom: 1.5rem;
-  background: linear-gradient(to right, #ffffff, #a0abc0);
+  background: linear-gradient(to right, #0f172a, #64748b);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .titleHighlight {
   background: linear-gradient(to right, var(--accent-primary), var(--accent-secondary));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -219,16 +221,18 @@
 
 .scanBox {
   padding: 2rem;
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-strong);
   border-radius: 1rem;
   min-width: 220px;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
 .scanBox:hover {
   transform: translateY(-5px);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: var(--accent-primary);
+  box-shadow: 0 10px 15px rgba(37, 99, 235, 0.1);
 }
 
 .pulseIcon {
