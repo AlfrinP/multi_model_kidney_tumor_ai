@@ -243,29 +243,37 @@ export default function TestSystem() {
                 </div>
 
                 <div className={styles.imagesGrid}>
+
                   <div className={styles.imageContainer}>
-                    <div className={styles.imageLabel}>Fused AI Mask</div>
-                    <div style={{width:'100%', height:'240px', borderRadius:'0.5rem', overflow:'hidden', position:'relative', border:'1px solid var(--border-light)'}}>
-                      {results.fusedMaskBase64 ? (
-                        <img src={`data:image/jpeg;base64,${results.fusedMaskBase64}`} alt="Fused Model Mask Output" style={{width:'100%', height:'100%', objectFit:'contain'}} />
-                      ) : (
-                        <div className={styles.placeholder} style={{height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                          <Scan size={48} />
-                          Segmentation Output
-                        </div>
+                    <div className={styles.imageLabel}>CT Scan Image</div>
+                    <div style={{width:'100%', height:'100%', borderRadius:'0.5rem', overflow:'hidden', position:'relative'}}>
+                      {results.ctBase64 && (
+                        <img src={`data:image/jpeg;base64,${results.ctBase64}`} alt="CT Scan" style={{width:'100%', height:'100%', objectFit:'contain'}} />
                       )}
                     </div>
                   </div>
                   <div className={styles.imageContainer}>
-                    <div className={styles.imageLabel}>Overlay Visualization</div>
-                    <div style={{width:'100%', height:'240px', borderRadius:'0.5rem', overflow:'hidden', position:'relative', border:'1px solid var(--border-light)'}}>
-                      {results.overlayBase64 ? (
-                        <img src={`data:image/jpeg;base64,${results.overlayBase64}`} alt="Overlay Output" style={{width:'100%', height:'100%', objectFit:'contain'}} />
-                      ) : (
-                        <div className={styles.placeholder} style={{height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                          <Layers size={48} />
-                          Composite Detection
-                        </div>
+                    <div className={styles.imageLabel}>CT AI Mask</div>
+                    <div style={{width:'100%', height:'100%', borderRadius:'0.5rem', overflow:'hidden', position:'relative'}}>
+                      {results.ctMaskBase64 && (
+                        <img src={`data:image/jpeg;base64,${results.ctMaskBase64}`} alt="CT Mask" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={styles.imageContainer}>
+                    <div className={styles.imageLabel}>MRI Scan Image</div>
+                    <div style={{width:'100%', height:'100%', borderRadius:'0.5rem', overflow:'hidden', position:'relative'}}>
+                      {results.mriBase64 && (
+                        <img src={`data:image/jpeg;base64,${results.mriBase64}`} alt="MRI Scan" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+                      )}
+                    </div>
+                  </div>
+                  <div className={styles.imageContainer}>
+                    <div className={styles.imageLabel}>MRI AI Mask</div>
+                    <div style={{width:'100%', height:'100%', borderRadius:'0.5rem', overflow:'hidden', position:'relative'}}>
+                      {results.mriMaskBase64 && (
+                        <img src={`data:image/jpeg;base64,${results.mriMaskBase64}`} alt="MRI Mask" style={{width:'100%', height:'100%', objectFit:'contain'}} />
                       )}
                     </div>
                   </div>

@@ -190,16 +190,14 @@ async def analyze_scans(ct_file: UploadFile = File(...), mri_file: UploadFile = 
     diagnosis = "Renal Tumor Detected" if tumor_detected else "No Tumor Detected"
     stage = predict_tumor_stage(diameter, tumor_detected)
 
-    overlay = ct_processed.copy()
-    overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
-    overlay[fused_mask == 1] = [255, 0, 0]
+    ct_rgb = cv2.cvtColor(ct_processed, cv2.COLOR_GRAY2RGB)
+    mri_rgb = cv2.cvtColor(mri_processed, cv2.COLOR_GRAY2RGB)
 
-    if bbox:
-        x_min, y_min, x_max, y_max = bbox
-        cv2.rectangle(overlay, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+    ct_mask_display = ct_rgb.copy()
+    ct_mask_display[ct_mask == 1] = [255, 69, 0]
 
-    mask_display = np.zeros_like(overlay)
-    mask_display[fused_mask == 1] = [255, 69, 0]
+    mri_mask_display = mri_rgb.copy()
+    mri_mask_display[mri_mask == 1] = [255, 69, 0]
 
     return JSONResponse({
         "diagnosis": diagnosis,
@@ -208,6 +206,8 @@ async def analyze_scans(ct_file: UploadFile = File(...), mri_file: UploadFile = 
         "diameter": f"{diameter:.2f} cm",
         "stage": stage,
         "localization": localization,
-        "fusedMaskBase64": encode_image(mask_display),
-        "overlayBase64": encode_image(overlay)
+        "ctBase64": encode_image(ct_rgb),
+        "mriBase64": encode_image(mri_rgb),
+        "ctMaskBase64": encode_image(ct_mask_display),
+        "mriMaskBase64": encode_image(mri_mask_display)
     })
