@@ -1,29 +1,73 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, UploadCloud, Scan, Microchip, Layers, ArrowLeft } from "lucide-react";
+import { Activity, UploadCloud, Scan, Microchip, Layers, ArrowLeft, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import styles from "./test.module.css";
 
 export default function TestSystem() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<any>(null);
+  
+  const [patientId, setPatientId] = useState("");
+  const [mriFile, setMriFile] = useState<File | null>(null);
+  const [ctFile, setCtFile] = useState<File | null>(null);
 
-  const handleAnalyze = () => {
+  const mriInputRef = useRef<HTMLInputElement>(null);
+  const ctInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, type: "mri" | "ct") => {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (type === "mri") setMriFile(file);
+      else setCtFile(file);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "mri" | "ct") => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (type === "mri") setMriFile(file);
+      else setCtFile(file);
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!mriFile || !ctFile) {
+      alert("Please upload both MRI and CT scans");
+      return;
+    }
+
     setIsAnalyzing(true);
-    // Simulate API delay
-    setTimeout(() => {
-      setIsAnalyzing(false);
-      setResults({
-        diagnosis: "Renal Tumor Detected",
-        confidence: "98.4%",
-        volume: "125.4 cm³",
-        diameter: "4.2 cm",
-        stage: "Stage I (T1)",
-        localization: "Left Kidney - Lower Cortex Region"
+    
+    try {
+      const formData = new FormData();
+      formData.append("mri_file", mriFile);
+      formData.append("ct_file", ctFile);
+
+      const response = await fetch("http://localhost:8000/analyze", {
+        method: "POST",
+        body: formData,
       });
-    }, 2500);
+
+      if (!response.ok) {
+        throw new Error("API request failed");
+      }
+
+      const data = await response.json();
+      setResults(data);
+    } catch (error) {
+      console.error(error);
+      alert("Error analyzing scans. Make sure the backend API is running.");
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -44,29 +88,78 @@ export default function TestSystem() {
             
             <div className={styles.inputGroup}>
               <label className={styles.label}>Patient Scan ID</label>
-              <input type="text" className={styles.input} placeholder="e.g. PT-10024" />
+              <input 
+                type="text" 
+                className={styles.input} 
+                placeholder="e.g. PT-10024" 
+                value={patientId}
+                onChange={(e) => setPatientId(e.target.value)}
+              />
             </div>
 
             <div className={styles.inputGroup}>
               <label className={styles.label}>T1-Weighted MRI Scan</label>
-              <div className={styles.uploadZone}>
-                <UploadCloud className={styles.uploadIcon} size={28} />
-                <div className={styles.uploadText}>Click or drag to upload MRI</div>
+              <div 
+                className={styles.uploadZone}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, "mri")}
+                onClick={() => mriInputRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  hidden 
+                  ref={mriInputRef} 
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={(e) => handleFileChange(e, "mri")} 
+                />
+                {mriFile ? (
+                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'0.5rem', color:'var(--success)'}}>
+                    <CheckCircle size={28} />
+                    <span style={{fontSize:'0.875rem', maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{mriFile.name}</span>
+                  </div>
+                ) : (
+                  <>
+                    <UploadCloud className={styles.uploadIcon} size={28} />
+                    <div className={styles.uploadText}>Click or drag to upload MRI</div>
+                  </>
+                )}
               </div>
             </div>
 
             <div className={styles.inputGroup}>
               <label className={styles.label}>Contrast CT Scan</label>
-              <div className={styles.uploadZone}>
-                <UploadCloud className={styles.uploadIcon} size={28} />
-                <div className={styles.uploadText}>Click or drag to upload CT</div>
+              <div 
+                className={styles.uploadZone}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, "ct")}
+                onClick={() => ctInputRef.current?.click()}
+              >
+                <input 
+                  type="file" 
+                  hidden 
+                  ref={ctInputRef} 
+                  accept="image/png, image/jpeg, image/jpg"
+                  onChange={(e) => handleFileChange(e, "ct")} 
+                />
+                {ctFile ? (
+                  <div style={{display:'flex', flexDirection:'column', alignItems:'center', gap:'0.5rem', color:'var(--success)'}}>
+                    <CheckCircle size={28} />
+                    <span style={{fontSize:'0.875rem', maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{ctFile.name}</span>
+                  </div>
+                ) : (
+                  <>
+                    <UploadCloud className={styles.uploadIcon} size={28} />
+                    <div className={styles.uploadText}>Click or drag to upload CT</div>
+                  </>
+                )}
               </div>
             </div>
 
             <button 
               className={styles.analyzeBtn} 
               onClick={handleAnalyze}
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || !mriFile || !ctFile}
+              style={{opacity: (isAnalyzing || !mriFile || !ctFile) ? 0.7 : 1}}
             >
               <Scan size={20} />
               {isAnalyzing ? "Processing Fusion Model..." : "Analyze Scans"}
@@ -120,9 +213,9 @@ export default function TestSystem() {
                 style={{display:'flex', flexDirection:'column', gap:'2rem'}}
               >
                 <div className={styles.metricsGrid}>
-                  <div className={styles.metricCard} style={{borderColor: 'var(--error)', background: 'rgba(239, 68, 68, 0.05)'}}>
+                  <div className={styles.metricCard} style={{borderColor: (results.diagnosis === "No Tumor Detected") ? 'var(--success)' : 'var(--error)', background: (results.diagnosis === "No Tumor Detected") ? 'rgba(34, 197, 94, 0.05)' : 'rgba(239, 68, 68, 0.05)'}}>
                     <span className={styles.metricLabel}>Diagnosis</span>
-                    <span className={styles.metricValue} style={{color:'var(--error)'}}>{results.diagnosis}</span>
+                    <span className={styles.metricValue} style={{color: (results.diagnosis === "No Tumor Detected") ? 'var(--success)' : 'var(--error)'}}>{results.diagnosis}</span>
                   </div>
                   <div className={styles.metricCard}>
                     <span className={styles.metricLabel}>AI Confidence</span>
@@ -152,16 +245,28 @@ export default function TestSystem() {
                 <div className={styles.imagesGrid}>
                   <div className={styles.imageContainer}>
                     <div className={styles.imageLabel}>Fused AI Mask</div>
-                    <div className={styles.placeholder}>
-                      <Scan size={48} />
-                      Segmentation Output
+                    <div style={{width:'100%', height:'240px', borderRadius:'0.5rem', overflow:'hidden', position:'relative', border:'1px solid var(--border-light)'}}>
+                      {results.fusedMaskBase64 ? (
+                        <img src={`data:image/jpeg;base64,${results.fusedMaskBase64}`} alt="Fused Model Mask Output" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+                      ) : (
+                        <div className={styles.placeholder} style={{height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                          <Scan size={48} />
+                          Segmentation Output
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className={styles.imageContainer}>
                     <div className={styles.imageLabel}>Overlay Visualization</div>
-                    <div className={styles.placeholder}>
-                      <Layers size={48} />
-                      Composite Detection
+                    <div style={{width:'100%', height:'240px', borderRadius:'0.5rem', overflow:'hidden', position:'relative', border:'1px solid var(--border-light)'}}>
+                      {results.overlayBase64 ? (
+                        <img src={`data:image/jpeg;base64,${results.overlayBase64}`} alt="Overlay Output" style={{width:'100%', height:'100%', objectFit:'contain'}} />
+                      ) : (
+                        <div className={styles.placeholder} style={{height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
+                          <Layers size={48} />
+                          Composite Detection
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
