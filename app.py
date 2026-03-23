@@ -182,17 +182,25 @@ def preprocess(image):
 # PREDICTION
 # ---------------------------------
 
-def predict(model,tensor):
-
+def predict(model, tensor):
     with torch.no_grad():
         pred = model(tensor)
 
     mask = pred.cpu().numpy()[0][0]
-    mask = (mask>0.5).astype(np.uint8)
+    binary_mask = (mask > 0.5).astype(np.uint8)
+    
+    # Only calculate confidence for the pixels the AI thinks are a tumor
+    tumor_pixels = pred[pred > 0.5]
+    
+    if len(tumor_pixels) > 0:
+        confidence = tumor_pixels.mean().item() * 100
+    else:
+        # If no tumor is detected, it is 100% confident the scan is healthy
+        # Or you could set it to 0 depending on how you want to display it
+        confidence = (1.0 - pred.mean().item()) * 100 
 
-    confidence = pred.mean().item()*100
+    return binary_mask, confidence
 
-    return mask,confidence
 
 
 # ---------------------------------
