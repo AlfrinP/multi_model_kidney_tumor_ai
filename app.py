@@ -305,8 +305,8 @@ with st.sidebar:
 
 if ct_file and mri_file:
 
-    ct_img = np.array(Image.open(ct_file))
-    mri_img = np.array(Image.open(mri_file))
+    ct_img = np.array(Image.open(ct_file).convert("RGB"))
+    mri_img = np.array(Image.open(mri_file).convert("RGB"))
 
     ct_tensor, ct_processed = preprocess(ct_img)
     mri_tensor, mri_processed = preprocess(mri_img)
@@ -330,21 +330,13 @@ if ct_file and mri_file:
         
         stage, stage_color = predict_tumor_stage(diameter, tumor_detected)
 
-        overlay = ct_processed.copy()
-        overlay = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
+        ct_rgb = cv2.cvtColor(ct_processed, cv2.COLOR_GRAY2RGB)
+        ct_mask_display = ct_rgb.copy()
+        ct_mask_display[ct_mask == 1] = [255, 69, 0]
 
-        # Add red color to where the mask is
-        overlay[fused_mask == 1] = [255, 0, 0]
-
-        if bbox:
-            x_min, y_min, x_max, y_max = bbox
-            cv2.rectangle(
-                overlay,
-                (x_min, y_min),
-                (x_max, y_max),
-                (0, 255, 0),
-                2
-            )
+        mri_rgb = cv2.cvtColor(mri_processed, cv2.COLOR_GRAY2RGB)
+        mri_mask_display = mri_rgb.copy()
+        mri_mask_display[mri_mask == 1] = [255, 69, 0]
 
     st.subheader(f"{diagnosis_color} Diagnosis Report: {scan_id if scan_id else 'Unknown Patient'}")
     
@@ -363,27 +355,23 @@ if ct_file and mri_file:
     st.subheader("Input Modalities")
     col1, col2 = st.columns(2)
     with col1:
-        st.image(ct_img, caption="Original CT Scan", use_container_width=True)
+        st.image(ct_img, caption="Original CT Scan", width='stretch')
     with col2:
-        st.image(mri_img, caption="Original MRI Scan", use_container_width=True)
+        st.image(mri_img, caption="Original MRI Scan", width='stretch')
 
     st.divider()
     
-    st.subheader("Segmentation & Fusion Results")
-    
-    # Create colored mask display
-    mask_display = np.zeros_like(overlay)
-    mask_display[fused_mask == 1] = [255, 69, 0] # Orange-Red color
+    st.subheader("Segmentation Results")
     
     r1, r2, r3, r4 = st.columns(4)
     with r1:
-        st.image(ct_processed, caption="Processed CT", use_container_width=True)
+        st.image(ct_processed, caption="CT Scan Image", width='stretch')
     with r2:
-        st.image(mri_processed, caption="Processed MRI", use_container_width=True)
+        st.image(ct_mask_display, caption="CT AI Mask", width='stretch')
     with r3:
-        st.image(mask_display, caption="Fused Mask", use_container_width=True)
+        st.image(mri_processed, caption="MRI Scan Image", width='stretch')
     with r4:
-        st.image(overlay, caption="Overlay Detection", use_container_width=True)
+        st.image(mri_mask_display, caption="MRI AI Mask", width='stretch')
 
 else:
     # Empty state UI
