@@ -1,0 +1,11 @@
+{
+  "modality": "mri",
+  "device": "cuda",
+  "num_samples": 1299,
+  "repeats_per_sample": 3,
+  "avg_inference_ms": 8.164351760800892,
+  "std_inference_ms": 2.1740557029386816,
+  "p95_inference_ms": 8.209915998304496,
+  "max_rss_mb": 1020.55859375,
+  "peak_gpu_memory_mb": 190.26708984375
+}
