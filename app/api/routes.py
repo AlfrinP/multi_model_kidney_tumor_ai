@@ -1,6 +1,5 @@
 import time
-from flask import Blueprint, request, jsonify
-from werkzeug.utils import secure_filename
+from fastapi import APIRouter, UploadFile, File, HTTPException, status
 import numpy as np
 from PIL import Image
 import io
@@ -10,38 +9,37 @@ from app.core.model import load_ct_model, load_mri_model, predict
 from app.core.postprocess import compute_measurements, predict_tumor_stage, tumor_localization
 from app.api.schemas import PredictionResponse, ErrorResponse
 
-api_bp = Blueprint("api", __name__)
+api_router = APIRouter()
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+
 def allowed_file(filename):
+    if not filename:
+        return False
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@api_bp.route("/health", methods=["GET"])
+@api_router.get("/health")
 def health():
-    return jsonify({"status": "healthy"})
+    return {"status": "healthy"}
 
-@api_bp.route("/predict", methods=["POST"])
-def predict_endpoint():
+@api_router.post("/predict", response_model=PredictionResponse)
+async def predict_endpoint(ct_image: UploadFile = File(...), mri_image: UploadFile = File(...)):
     start_time = time.time()
-    # Check files
-    if "ct_image" not in request.files or "mri_image" not in request.files:
-        return jsonify(ErrorResponse(error="Missing files", message="Both ct_image and mri_image are required").dict()), 400
     
-    ct_file = request.files["ct_image"]
-    mri_file = request.files["mri_image"]
+    if not ct_image.filename or not mri_image.filename:
+        raise HTTPException(status_code=400, detail="Empty filename. No file selected.")
     
-    if ct_file.filename == "" or mri_file.filename == "":
-        return jsonify(ErrorResponse(error="Empty filename", message="No file selected").dict()), 400
-    
-    if not (allowed_file(ct_file.filename) and allowed_file(mri_file.filename)):
-        return jsonify(ErrorResponse(error="Invalid file type", message="Only PNG, JPG, JPEG allowed").dict()), 400
+    if not (allowed_file(ct_image.filename) and allowed_file(mri_image.filename)):
+        raise HTTPException(status_code=400, detail="Invalid file type. Only PNG, JPG, JPEG allowed.")
     
     try:
         # Read images
-        ct_img = np.array(Image.open(io.BytesIO(ct_file.read())).convert("RGB"))
-        mri_img = np.array(Image.open(io.BytesIO(mri_file.read())).convert("RGB"))
+        ct_bytes = await ct_image.read()
+        mri_bytes = await mri_image.read()
+        ct_img = np.array(Image.open(io.BytesIO(ct_bytes)).convert("RGB"))
+        mri_img = np.array(Image.open(io.BytesIO(mri_bytes)).convert("RGB"))
     except Exception as e:
-        return jsonify(ErrorResponse(error="Image read error", message=str(e)).dict()), 400
+        raise HTTPException(status_code=400, detail=f"Image read error: {str(e)}")
     
     # Preprocess
     ct_tensor, ct_gray = preprocess(ct_img)
@@ -75,7 +73,7 @@ def predict_endpoint():
     
     processing_time = (time.time() - start_time) * 1000.0
     
-    response = PredictionResponse(
+    return PredictionResponse(
         tumor_detected=tumor_detected,
         cancer_present=tumor_detected,   # same for this model
         probability=round(confidence, 2),
@@ -83,5 +81,3 @@ def predict_endpoint():
         processing_time_ms=round(processing_time, 2),
         message="Prediction completed successfully"
     )
-    
-    return jsonify(response.dict())

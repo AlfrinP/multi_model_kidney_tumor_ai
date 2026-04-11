@@ -1,9 +1,10 @@
-from flask import Flask
-from app.api.routes import api_bp
+import uvicorn
+from fastapi import FastAPI
+from app.api.routes import api_router
 from app.config import Config
 
-app = Flask(__name__)
-app.register_blueprint(api_bp, url_prefix="/api")
+app = FastAPI(title="RenalTumorAI API")
+app.include_router(api_router, prefix="/api")
 
 if __name__ == "__main__":
-    app.run(host=Config.API_HOST, port=Config.API_PORT, debug=False)
+    uvicorn.run("api:app", host=Config.API_HOST, port=Config.API_PORT, reload=False)

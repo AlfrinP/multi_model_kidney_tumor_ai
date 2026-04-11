@@ -7,7 +7,7 @@ A state-of-the-art medical image processing application designed to perform accu
 ## 🚀 Key Features
 
 - **Multi-Modal AI Fusion**: Combines insights from both CT and MRI scan inputs by running them asynchronously through dedicated U-Net models to generate accurate spatial detection.
-- **REST API Subsystem**: Decoupled backend powered by Flask to serve model inference endpoints.
+- **REST API Subsystem**: Decoupled backend powered by FastAPI to serve model inference endpoints.
 - **Automated Tumor Segmentation**: Identifies and precisely outlines the shape and bounds of the renal tumor.
 - **Volumetric & Spatial Measurements**: Automatically computes critical diagnostic metrics including Tumor Diameter (cm) and Tumor Volume (cm³).
 - **Tumor Stage Prediction**: Predicts early versus advanced tumor stages via the TNM clinical categorization system based on physical scan boundaries.
@@ -29,7 +29,7 @@ After independent inference, both segmentation outputs are fused to improve accu
 ## ⚙️ Installation & Requirements
 
 Ensure you have **Python 3.8+** installed.
-Dependencies include: `Flask`, `pydantic`, `python-dotenv`, `streamlit`, `torch`, `torchvision`, `opencv-python`, `pillow`, `requests`, `numpy`.
+Dependencies include: `FastAPI`, `pydantic`, `python-dotenv`, `streamlit`, `torch`, `torchvision`, `opencv-python`, `pillow`, `requests`, `numpy`.
 
 ### 🐧 Linux / macOS
 
@@ -42,7 +42,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-pip install Flask pydantic python-dotenv streamlit torch torchvision opencv-python pillow requests numpy
+pip install "fastapi[standard]" pydantic python-dotenv streamlit torch torchvision opencv-python pillow requests numpy
 ```
 
 ---
@@ -60,21 +60,21 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 
 # Install dependencies
-pip install Flask pydantic python-dotenv streamlit torch torchvision opencv-python pillow requests numpy
+pip install "fastapi[standard]" pydantic python-dotenv streamlit torch torchvision opencv-python pillow requests numpy
 ```
 
 ---
 
 ## 💻 Usage Guide
 
-The application is now decoupled into a Flask API backward and a Streamlit frontend.
+The application is now decoupled into a FastAPI backend and a Streamlit frontend.
 First, make sure the `.env` file is properly configured.
 
-1. Start the Flask API server:
+1. Start the FastAPI server:
    ```bash
    python api.py
    ```
-   (Alternatively, use `flask run` or wait for it to boot)
+   (Alternatively, use `fastapi dev api.py` or `uvicorn api:app --reload`)
 
 2. Start the Streamlit application in a separate terminal:
    ```bash
