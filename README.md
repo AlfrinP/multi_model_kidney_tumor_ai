@@ -7,10 +7,10 @@ A state-of-the-art medical image processing application designed to perform accu
 ## 🚀 Key Features
 
 - **Multi-Modal AI Fusion**: Combines insights from both CT and MRI scan inputs by running them asynchronously through dedicated U-Net models to generate accurate spatial detection.
+- **REST API Subsystem**: Decoupled backend powered by Flask to serve model inference endpoints.
 - **Automated Tumor Segmentation**: Identifies and precisely outlines the shape and bounds of the renal tumor.
 - **Volumetric & Spatial Measurements**: Automatically computes critical diagnostic metrics including Tumor Diameter (cm) and Tumor Volume (cm³).
 - **Tumor Stage Prediction**: Predicts early versus advanced tumor stages via the TNM clinical categorization system based on physical scan boundaries.
-- **Anatomical Localization**: Classifies real-time spatial orientation, automatically determining whether the tumor is on the Left/Right Kidney and Upper/Lower Cortex.
 - **Modern Dashboard UI**: Built on an intuitive Streamlit interface, enabling seamless upload, visualization, and analysis of scans.
 
 ---
@@ -29,6 +29,7 @@ After independent inference, both segmentation outputs are fused to improve accu
 ## ⚙️ Installation & Requirements
 
 Ensure you have **Python 3.8+** installed.
+Dependencies include: `Flask`, `pydantic`, `python-dotenv`, `streamlit`, `torch`, `torchvision`, `opencv-python`, `pillow`, `requests`, `numpy`.
 
 ### 🐧 Linux / macOS
 
@@ -41,8 +42,8 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-pip install -r requirements.txt
-````
+pip install Flask pydantic python-dotenv streamlit torch torchvision opencv-python pillow requests numpy
+```
 
 ---
 
@@ -59,72 +60,38 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 
 # Install dependencies
-pip install -r requirements.txt
+pip install Flask pydantic python-dotenv streamlit torch torchvision opencv-python pillow requests numpy
 ```
-
-> ⚠️ If activation fails, run:
->
-> ```powershell
-> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-> ```
-
----
-
-### 🪟 Windows (Command Prompt)
-
-```cmd
-:: Navigate to project
-cd multi_model_kidney_tumor_ai
-
-:: Create virtual environment
-python -m venv .venv
-
-:: Activate virtual environment
-.venv\Scripts\activate.bat
-
-:: Install dependencies
-pip install -r requirements.txt
-```
-
----
-
-### ⚡ Notes
-
-* Ensure Python is added to your system `PATH`.
-* On Linux/macOS, use `python3` if `python` is unavailable.
-* For GPU acceleration, install the CUDA-compatible version of PyTorch.
-* CPU-only execution is supported but may be slower.
 
 ---
 
 ## 💻 Usage Guide
 
-1. Start the Streamlit application:
+The application is now decoupled into a Flask API backward and a Streamlit frontend.
+First, make sure the `.env` file is properly configured.
 
+1. Start the Flask API server:
    ```bash
-   streamlit run app.py
+   python api.py
+   ```
+   (Alternatively, use `flask run` or wait for it to boot)
+
+2. Start the Streamlit application in a separate terminal:
+   ```bash
+   python streamlit.py
    ```
 
-2. Open your browser and go to:
-
+3. Open your browser and go to:
    ```
    http://localhost:8501
    ```
 
-3. In the sidebar:
-
+4. In the sidebar:
    * Enter an optional **Patient Scan ID**
    * Upload corresponding **CT Scan** and **MRI Scan** (`.png`, `.jpg`, `.jpeg`)
 
-4. Click **Analyze**:
-
-   * The system performs inference
-   * Fuses CT + MRI outputs
+5. Click **Run AI Diagnosis**:
+   * The streamclient client reaches out to the API backend
+   * Performs inference & fusion 
    * Computes tumor metrics
-   * Displays segmentation overlays and diagnostic results
-
----
-
-## 📌 Summary
-
-This system provides an end-to-end pipeline for kidney tumor analysis using multi-modal AI, combining precision, automation, and a user-friendly interface for real-world clinical support.
+   * Displays diagnostic results
