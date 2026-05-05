@@ -3,6 +3,7 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, status
 import numpy as np
 from PIL import Image
 import io
+import base64
 
 from app.core.preprocess import preprocess
 from app.core.model import load_ct_model, load_mri_model, predict
@@ -17,6 +18,15 @@ def allowed_file(filename):
     if not filename:
         return False
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def encode_mask_to_base64(mask: np.ndarray) -> str:
+    if mask is None:
+        return ""
+    mask_visual = (mask * 255).astype(np.uint8)
+    img = Image.fromarray(mask_visual, mode='L')
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 @api_router.get("/health")
 def health():
@@ -79,5 +89,7 @@ async def predict_endpoint(ct_image: UploadFile = File(...), mri_image: UploadFi
         probability=round(confidence, 2),
         additional_info=additional_info,
         processing_time_ms=round(processing_time, 2),
-        message="Prediction completed successfully"
+        message="Prediction completed successfully",
+        ct_mask_base64=encode_mask_to_base64(ct_mask),
+        mri_mask_base64=encode_mask_to_base64(mri_mask)
     )

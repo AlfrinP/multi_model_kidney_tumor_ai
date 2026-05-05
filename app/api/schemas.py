@@ -8,6 +8,8 @@ class PredictionResponse(BaseModel):
     additional_info: dict = Field(..., description="Contains volume, diameter, stage, localization")
     processing_time_ms: float
     message: str = "Prediction completed successfully"
+    ct_mask_base64: Optional[str] = Field(None, description="Base64 encoded PNG of the CT mask")
+    mri_mask_base64: Optional[str] = Field(None, description="Base64 encoded PNG of the MRI mask")
 
 class ErrorResponse(BaseModel):
     error: str
