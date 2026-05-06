@@ -97,5 +97,6 @@ def predict(model, tensor):
     if len(tumor_pixels) > 0:
         confidence = tumor_pixels.mean().item() * 100
     else:
-        confidence = (1.0 - pred.mean().item()) * 100
+        confidence = pred.mean().item() * 100
+
     return binary_mask, confidence

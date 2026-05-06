@@ -12,4 +12,8 @@ def preprocess(image: np.ndarray) -> tuple[torch.Tensor, np.ndarray]:
     resized = cv2.resize(gray, (256, 256))
     normalized = resized / 255.0
     tensor = torch.tensor(normalized, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-    return tensor.to(Config.DEVICE), resized
+    try:
+        return tensor.to(Config.DEVICE), resized
+    except RuntimeError:
+        Config.DEVICE = "cpu"
+        return tensor.cpu(), resized
