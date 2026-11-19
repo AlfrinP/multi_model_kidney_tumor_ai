@@ -1,5 +1,50 @@
-.env
-.venv
-venv
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.*
 
-__pycache__
+# Next.js and frontend build output
+.next/
+**/.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python virtual environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local app/tool state
+.streamlit/secrets.toml
+.vercel/
+.turbo/
+.cache/
+
+# Logs and OS/editor noise
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

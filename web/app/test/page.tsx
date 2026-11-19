@@ -51,7 +51,8 @@ export default function TestSystem() {
       formData.append("mri_file", mriFile);
       formData.append("ct_file", ctFile);
 
-      const response = await fetch("http://localhost:8000/analyze", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const response = await fetch(`${apiUrl}/analyze`, {
         method: "POST",
         body: formData,
       });

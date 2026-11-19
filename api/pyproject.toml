@@ -1,0 +1,20 @@
+[project]
+name = "multi-model-kidney-tumor-ai"
+version = "0.1.0"
+description = "FastAPI service for kidney tumor scan analysis"
+authors = []
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.115.0",
+    "numpy>=1.26.0",
+    "opencv-python-headless>=4.10.0",
+    "pillow>=10.0.0",
+    "torch>=2.5.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.13.9,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "api"

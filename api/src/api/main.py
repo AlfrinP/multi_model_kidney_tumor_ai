@@ -1,5 +1,6 @@
 import io
 import base64
+from pathlib import Path
 import cv2
 import numpy as np
 import torch
@@ -20,6 +21,7 @@ app.add_middleware(
 )
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+MODEL_DIR = Path(__file__).resolve().parents[1] / "models"
 
 class DoubleConv(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -103,14 +105,14 @@ class UNet_MRI(nn.Module):
 
 ct_model = UNet_CT().to(DEVICE)
 try:
-    ct_model.load_state_dict(torch.load("models/kidney_ct_scan.pth", map_location=DEVICE))
+    ct_model.load_state_dict(torch.load(MODEL_DIR / "kidney_ct_scan.pth", map_location=DEVICE))
 except Exception as e:
     print("Warning: Could not load ct_model:", e)
 ct_model.eval()
 
 mri_model = UNet_MRI().to(DEVICE)
 try:
-    mri_model.load_state_dict(torch.load("models/kidney_mri.pth", map_location=DEVICE))
+    mri_model.load_state_dict(torch.load(MODEL_DIR / "kidney_mri.pth", map_location=DEVICE))
 except Exception as e:
     print("Warning: Could not load mri_model:", e)
 mri_model.eval()
